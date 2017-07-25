@@ -1,5 +1,5 @@
 import time
-from pyserve.server import Server
+from pyserve import Server
 
 class HelloHandler:
     def __init__(self, message='Hello World!', wait_before_message=2):

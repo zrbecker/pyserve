@@ -1,13 +1,18 @@
+import select
 import socket
 import sys
 
 class Connection:
     def __init__(self, sock, address):
         self.sock = sock
+        self.sock.setblocking(False)
         self.address = address
 
     def send(self, message, encoding='utf-8'):
         self.sock.send(message.encode(encoding))
+
+    def recv(self, bufsize):
+        return self.sock.recv(bufsize)
 
     def close(self):
         self.sock.close()
@@ -29,12 +34,13 @@ class Server:
 
     def accept_new_connections(self, limit=10):
         connection = None
-        try:
-            connection = Connection(*self.sock.accept())
-        except BlockingIOError:
-            return  # No more connections
-        if connection:
-            self.add_connection(connection)
+        for _ in range(limit):
+            try:
+                connection = Connection(*self.sock.accept())
+            except BlockingIOError:
+                return  # No more connections
+            if connection:
+                self.add_connection(connection)
 
     def add_connection(self, conn):
         if self.verbose:
@@ -61,7 +67,7 @@ class Server:
 
     def run(self, connection_handler):
         if self.verbose:
-            print('Server Listening {}:{}'.format(*self.sock.getsockname()))
+            print('server listening {}:{}'.format(*self.sock.getsockname()))
         try:
             error_count = 0
             while True:
